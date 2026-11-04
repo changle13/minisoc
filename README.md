@@ -23,6 +23,32 @@ MiniSOC 自己实现了一条安全运营闭环：
 - 响应 Agent 安全设计：HMAC 签名、时间戳防重放、IP 白名单、独立 iptables 链、dry-run、审计日志
 - Vue 3 前端：登录、告警中心、告警详情、事件工单、响应记录
 
+## 界面截图
+
+### 登录
+
+![登录](docs/images/login.png)
+
+### 告警中心
+
+![告警中心](docs/images/alerts.png)
+
+### 告警详情与原始证据
+
+![告警详情](docs/images/alert-detail.png)
+
+### 事件工单
+
+![事件工单](docs/images/incidents.png)
+
+### 事件详情
+
+![事件详情](docs/images/incident-detail.png)
+
+### 响应记录
+
+![响应记录](docs/images/actions.png)
+
 ## 架构
 
 ```mermaid
