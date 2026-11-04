@@ -4,6 +4,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 
 from app.api.alerts import router as alerts_router
+from app.api.incidents import router as incidents_router
 from app.api.ingest import router as ingest_router
 from app.core.config import settings
 from app.db import check_postgres, check_redis, init_db
@@ -21,6 +22,7 @@ app = FastAPI(title=settings.app_name, version="0.1.0", lifespan=lifespan)
 
 app.include_router(ingest_router)
 app.include_router(alerts_router)
+app.include_router(incidents_router)
 
 
 @app.get("/health")
