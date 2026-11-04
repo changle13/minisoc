@@ -21,3 +21,4 @@ class EventBatch(BaseModel):
 
 class IngestResponse(BaseModel):
     accepted: int
+    alerts_triggered: int = 0
