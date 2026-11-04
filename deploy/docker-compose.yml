@@ -44,6 +44,9 @@ services:
       ACCESS_TOKEN_EXPIRE_MINUTES: "60"
       ADMIN_USERNAME: admin
       ADMIN_PASSWORD: admin_dev_password
+      RESPONSE_ENABLED: "true"
+      RESPONSE_AGENT_URL: http://192.168.65.20:9000
+      RESPONSE_AGENT_SECRET: dev-response-secret
     ports:
       - "8000:8000"
     volumes:

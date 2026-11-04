@@ -13,6 +13,9 @@ class Settings(BaseSettings):
     access_token_expire_minutes: int = 60
     admin_username: str = "admin"
     admin_password: str = "admin_dev_password"
+    response_enabled: bool = True
+    response_agent_url: str = "http://192.168.65.20:9000"
+    response_agent_secret: str = "dev-response-secret"
 
     model_config = SettingsConfigDict(
         env_file=".env",

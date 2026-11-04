@@ -7,6 +7,7 @@ from app.models import Event
 from app.schemas.event import EventBatch, IngestResponse
 from app.services.correlation import correlate_incidents
 from app.services.detection import detect_ssh_bruteforce
+from app.services.response import auto_block_alerts
 
 router = APIRouter(
     prefix="/api/v1/ingest",
@@ -23,6 +24,7 @@ def ingest_events(batch: EventBatch, db: Session = Depends(get_db)) -> IngestRes
     alerts = detect_ssh_bruteforce(db, rows)
     incidents = correlate_incidents(db, alerts)
     db.commit()
+    auto_block_alerts(db, alerts)
     return IngestResponse(
         accepted=len(rows),
         alerts_triggered=len(alerts),
