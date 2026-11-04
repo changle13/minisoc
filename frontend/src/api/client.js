@@ -61,3 +61,7 @@ export function fetchIncidents(params) {
 export function fetchIncident(id) {
   return request(`/incidents/${id}`)
 }
+
+export function fetchActions(params) {
+  return request(`/actions${buildQuery(params)}`)
+}

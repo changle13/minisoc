@@ -1,6 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router'
 
 import { isLoggedIn } from '../auth'
+import Actions from '../views/Actions.vue'
 import AlertDetail from '../views/AlertDetail.vue'
 import Alerts from '../views/Alerts.vue'
 import IncidentDetail from '../views/IncidentDetail.vue'
@@ -25,6 +26,7 @@ const router = createRouter({
           name: 'incident-detail',
           component: IncidentDetail,
         },
+        { path: 'actions', name: 'actions', component: Actions },
       ],
     },
   ],

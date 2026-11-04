@@ -5,6 +5,7 @@
       <el-menu :default-active="activeMenu" router class="menu">
         <el-menu-item index="/alerts">告警中心</el-menu-item>
         <el-menu-item index="/incidents">事件工单</el-menu-item>
+        <el-menu-item index="/actions">响应记录</el-menu-item>
       </el-menu>
     </el-aside>
 
@@ -37,6 +38,7 @@ const username = getUser() || 'unknown'
 const activeMenu = computed(() => {
   if (route.path.startsWith('/alerts')) return '/alerts'
   if (route.path.startsWith('/incidents')) return '/incidents'
+  if (route.path.startsWith('/actions')) return '/actions'
   return route.path
 })
 
