@@ -10,7 +10,7 @@
 - [ ] 日志采集与标准化
 - [ ] 检测引擎与告警关联
 - [ ] 事件工单与自动响应
-- [ ] 前端仪表盘
+- [x] 前端登录、告警、事件页面
 - [ ] 攻击场景验证与报告
 
 ## 快速启动
@@ -20,6 +20,29 @@ cd deploy
 docker compose up -d --build
 curl http://localhost:8000/health
 ```
+
+## 前端开发
+
+```bash
+source ~/minisoc/scripts/node_path.sh
+cd ~/minisoc/frontend
+npm install
+npm run dev
+```
+
+访问：
+
+```text
+http://192.168.65.10:5173
+```
+
+开发环境默认管理员账号：
+
+```text
+admin / admin_dev_password
+```
+
+生产环境必须修改管理员密码和 JWT_SECRET。
 
 ## 目录结构
 
