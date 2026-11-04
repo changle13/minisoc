@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import Any
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class EventIn(BaseModel):
@@ -22,3 +22,18 @@ class EventBatch(BaseModel):
 class IngestResponse(BaseModel):
     accepted: int
     alerts_triggered: int = 0
+
+
+class EventOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    timestamp: datetime
+    source_type: str
+    host: str | None = None
+    username: str | None = None
+    src_ip: str | None = None
+    process: str | None = None
+    command_line: str | None = None
+    raw: dict[str, Any]
+    created_at: datetime
