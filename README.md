@@ -1,31 +1,73 @@
 # MiniSOC
 
-轻量级安全运营与应急响应平台（MiniSOC）。
+轻量级安全运营与应急响应平台。
 
-## 当前进度
+MiniSOC 自己实现了一条安全运营闭环：
 
-- [x] Ubuntu Server 22.04 VM + SSH
-- [x] Docker + Docker Compose
-- [x] FastAPI + PostgreSQL + Redis 基础骨架
-- [ ] 日志采集与标准化
-- [ ] 检测引擎与告警关联
-- [ ] 事件工单与自动响应
-- [x] 前端登录、告警、事件页面
-- [ ] 攻击场景验证与报告
+```text
+日志采集 → 标准化 → 规则检测 → 告警去重 → 事件关联 → 响应处置 → 审计
+```
+
+它不是把 Wazuh/ELK 装起来，而是自己实现了日志接入、检测引擎、告警关联、事件工单和自动响应链路。
+
+## 功能
+
+- Linux `auth.log` 日志采集，Agent 支持 offset 断点续传
+- API Key 鉴权的事件接入接口
+- SSH 暴力破解检测：同一来源 IP 5 分钟内失败 ≥ 5 次
+- 告警去重：同一规则、实体、时间窗口只保留一条告警，更新 `count`
+- Incident 事件工单：同实体 10 分钟内多条告警自动关联
+- 告警详情可回溯原始 Event 证据
+- JWT 登录 + RBAC：`admin / analyst / viewer`
+- 自动响应：高危 SSH 爆破告警自动调用响应 Agent 封禁来源 IP
+- 响应 Agent 安全设计：HMAC 签名、时间戳防重放、IP 白名单、独立 iptables 链、dry-run、审计日志
+- Vue 3 前端：登录、告警中心、告警详情、事件工单、响应记录
+
+## 架构
+
+```mermaid
+flowchart LR
+  Victim[Victim VM 192.168.65.20] -->|auth.log| Agent[Log Agent]
+  Agent -->|POST /api/v1/ingest/events\nX-API-Key| API[FastAPI]
+  API --> PG[(PostgreSQL)]
+  API --> Redis[(Redis)]
+  API --> Detector[检测与关联]
+  Detector --> PG
+  Detector -->|HMAC 签名请求| Response[Response Agent]
+  Response -->|iptables| Victim
+  UI[Vue 3 Frontend] -->|JWT| API
+```
+
+更详细的架构、数据模型、检测逻辑和失败模式见 [docs/architecture.md](docs/architecture.md)。
+
+## 技术栈
+
+| 层 | 技术 |
+|---|---|
+| 后端 | Python 3.11、FastAPI、SQLAlchemy 2.0、Pydantic v2 |
+| 数据库 | PostgreSQL 16 |
+| 缓存 | Redis 7 |
+| 前端 | Vue 3、Vite、Element Plus |
+| 部署 | Docker Compose |
+| 日志 Agent | Python 标准库，offset 断点续传 |
+| 响应 Agent | Python 标准库 HTTP Server、iptables、HMAC |
+| 测试/验证 | Paramiko、真实 SSH 密码爆破、合成事件 |
 
 ## 快速启动
+
+### 1. 后端
 
 ```bash
 cd deploy
 docker compose up -d --build
-curl http://localhost:8000/health
+curl -sS http://localhost:8000/health
 ```
 
-## 前端开发
+### 2. 前端
 
 ```bash
 source ~/minisoc/scripts/node_path.sh
-cd ~/minisoc/frontend
+cd frontend
 npm install
 npm run dev
 ```
@@ -36,13 +78,92 @@ npm run dev
 http://192.168.65.10:5173
 ```
 
-开发环境默认管理员账号：
+开发环境账号：
 
 ```text
 admin / admin_dev_password
+viewer / viewer_dev_password
 ```
 
-生产环境必须修改管理员密码和 JWT_SECRET。
+### 3. Victim 日志 Agent
+
+在 Victim 上执行：
+
+```bash
+MINISOC_LOG_FILE=/var/log/auth.log \
+MINISOC_API_URL=http://192.168.65.10:8000 \
+python3 ~/agent.py
+```
+
+### 4. 响应 Agent
+
+在 Victim 上以 root 运行：
+
+```bash
+sudo env MINISOC_RESPONSE_DRY_RUN=0 \
+  python3 /home/victim/response_agent.py
+```
+
+默认 `MINISOC_RESPONSE_DRY_RUN=1`，只模拟不执行 iptables。
+
+## API
+
+| 方法 | 路径 | 认证 | 说明 |
+|---|---|---|---|
+| POST | `/api/v1/auth/login` | 无 | 用户登录，返回 JWT |
+| GET | `/api/v1/auth/me` | JWT | 当前用户 |
+| POST | `/api/v1/auth/users` | admin | 创建用户 |
+| POST | `/api/v1/ingest/events` | API Key | 上报事件 |
+| GET | `/api/v1/alerts` | JWT | 告警列表，支持 severity/status/limit/offset |
+| GET | `/api/v1/alerts/{id}` | JWT | 告警详情 + 原始证据 |
+| GET | `/api/v1/incidents` | JWT | 事件工单列表 |
+| GET | `/api/v1/incidents/{id}` | JWT | 事件工单 + 关联告警 |
+| GET | `/api/v1/actions` | JWT | 响应审计记录 |
+
+## 检测逻辑
+
+### SSH 暴力破解
+
+- 数据源：`auth.log` 中的 `Failed password`
+- 条件：同一来源 IP、5 分钟窗口内失败次数 ≥ 5
+- 告警去重键：`ssh_bruteforce:{src_ip}:{5分钟桶}`
+- 同一窗口重复触发只更新 `count` 和 `last_seen`
+
+### 事件工单关联
+
+- 条件：同一 `entity`、10 分钟窗口内 ≥ 2 条告警
+- 结果：生成 Incident，并通过 `incident_alerts` 关联多条告警
+- 已有 Incident 会复用，避免重复创建
+
+## 安全设计
+
+- Agent 接入使用 API Key，用户登录使用 JWT，二者职责分离
+- 密码使用 bcrypt 哈希，不存明文
+- RBAC 最小权限：viewer / analyst / admin
+- 响应 Agent 使用 HMAC-SHA256 签名 + 时间戳，防伪造和重放
+- 响应 Agent 白名单保护 SOC、Victim 和 localhost
+- 独立 iptables 链 `MINISOC_BLOCK`，方便清理
+- 响应默认 dry-run，执行动作写本地审计日志和 SOC `response_actions` 表
+
+## 当前限制
+
+- 检测和响应目前是同步执行，生产环境应改为消息队列/Worker 异步处理
+- 单机部署，无高可用
+- 尚未接入 Alembic 数据库迁移
+- 开发环境使用默认密码和 JWT secret，生产必须更换
+- 当前只覆盖 SSH 爆破，Web 攻击和主机进程检测是后续路线
+- 前端使用 `localStorage` 存 JWT，生产建议 HttpOnly Cookie
+- 尚未配置 HTTPS、登录限流和完整自动化测试
+
+## 后续路线
+
+- [ ] Kali VM + DVWA，补充 SQL 注入、Web 扫描、反弹 Shell 场景
+- [ ] Nginx access log 与 auditd 解析器
+- [ ] Celery/Worker 异步检测与响应
+- [ ] Alembic 数据库迁移
+- [ ] 前端响应记录筛选和详情
+- [ ] 指标统计：MTTD、误报率、检测覆盖率
+- [ ] Demo 视频和简历包装
 
 ## 目录结构
 
@@ -52,8 +173,9 @@ frontend/         Vue 3 前端
 agent/            日志采集 Agent
 response-agent/   响应 Agent
 lab/              靶场与攻击脚本
-deploy/           Docker Compose 部署文件
-docs/             架构、威胁模型、攻击复现文档
+deploy/           Docker Compose
+docs/             架构、演示、面试文档
+scripts/          开发辅助脚本
 ```
 
 ## 安全说明
