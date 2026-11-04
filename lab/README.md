@@ -6,7 +6,8 @@
 
 ### `attack-scripts/send_fake_bruteforce.py`
 
-向 SOC 接入 API 发送 6 条合成 SSH 失败事件，来源 IP 固定为 `192.168.65.99`。
+向 SOC 接入 API 发送 6 条合成 SSH 失败事件，来源 IP 固定为 `192.168.65.99`。  
+脚本会自动读取 `deploy/.env` 中的 `API_KEY`。
 
 用途：
 
@@ -22,7 +23,8 @@ python3 lab/attack-scripts/send_fake_bruteforce.py
 
 ### `attack-scripts/send_response_action.py`
 
-直接向 Victim 响应 Agent 发送带 HMAC 签名的 block/unblock 请求。
+直接向 Victim 响应 Agent 发送带 HMAC 签名的 block/unblock 请求。  
+脚本会自动读取 `deploy/.env` 中的 `RESPONSE_AGENT_SECRET`。
 
 ```bash
 python3 lab/attack-scripts/send_response_action.py block 192.168.65.99

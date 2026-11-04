@@ -11,7 +11,7 @@ from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
 
 API_URL = os.getenv("MINISOC_API_URL", "http://192.168.65.10:8000")
-API_KEY = os.getenv("MINISOC_API_KEY", "dev-ingest-key")
+API_KEY = os.getenv("MINISOC_API_KEY", "change-me-ingest-key")
 LOG_FILE = Path(os.getenv("MINISOC_LOG_FILE", "/var/log/auth.log"))
 STATE_FILE = Path(os.getenv("MINISOC_STATE_FILE", "agent_state.json"))
 BATCH_SIZE = int(os.getenv("MINISOC_BATCH_SIZE", "100"))

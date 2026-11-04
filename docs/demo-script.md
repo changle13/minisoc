@@ -14,8 +14,9 @@ curl -sS http://localhost:8000/health
 
 ```text
 http://192.168.65.10:5173
-admin / admin_dev_password
 ```
+
+账号使用 `deploy/.env` 中的 `ADMIN_USERNAME` / `ADMIN_PASSWORD`。
 
 Victim：
 

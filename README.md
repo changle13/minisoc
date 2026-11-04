@@ -55,6 +55,17 @@ flowchart LR
 
 ## 快速启动
 
+### 0. 环境变量
+
+```bash
+cd deploy
+cp .env.example .env
+```
+
+编辑 `deploy/.env`，设置数据库密码、`API_KEY`、`JWT_SECRET`、管理员密码和 `RESPONSE_AGENT_SECRET`。
+
+`deploy/.env` 已被 `.gitignore` 排除，不要提交真实密钥。
+
 ### 1. 后端
 
 ```bash
@@ -80,10 +91,8 @@ http://192.168.65.10:5173
 
 开发环境账号：
 
-```text
-admin / admin_dev_password
-viewer / viewer_dev_password
-```
+使用 `deploy/.env` 中的 `ADMIN_USERNAME` / `ADMIN_PASSWORD` 登录。  
+首次启动会自动创建管理员账号。
 
 ### 3. Victim 日志 Agent
 
@@ -92,6 +101,7 @@ viewer / viewer_dev_password
 ```bash
 MINISOC_LOG_FILE=/var/log/auth.log \
 MINISOC_API_URL=http://192.168.65.10:8000 \
+MINISOC_API_KEY=<API_KEY from deploy/.env> \
 python3 ~/agent.py
 ```
 
@@ -100,7 +110,8 @@ python3 ~/agent.py
 在 Victim 上以 root 运行：
 
 ```bash
-sudo env MINISOC_RESPONSE_DRY_RUN=0 \
+sudo env MINISOC_RESPONSE_SECRET=<RESPONSE_AGENT_SECRET from deploy/.env> \
+  MINISOC_RESPONSE_DRY_RUN=0 \
   python3 /home/victim/response_agent.py
 ```
 
@@ -152,6 +163,13 @@ sudo env MINISOC_RESPONSE_DRY_RUN=0 \
 - 响应 Agent 白名单保护 SOC、Victim 和 localhost
 - 独立 iptables 链 `MINISOC_BLOCK`，方便清理
 - 响应默认 dry-run，执行动作写本地审计日志和 SOC `response_actions` 表
+
+## 密钥管理
+
+所有密钥通过 `deploy/.env` 注入，`.env` 已加入 `.gitignore`。  
+`deploy/.env.example` 只包含占位符，不包含真实密钥。
+
+历史提交中的 `dev-*` 字符串仅为早期本地开发占位，不是生产密钥；当前版本已全部改为环境变量。
 
 ## 当前限制
 

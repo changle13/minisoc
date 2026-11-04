@@ -1,8 +1,28 @@
 import json
+import os
 import urllib.request
 from datetime import datetime, timedelta, timezone
+from pathlib import Path
 
-BASE = "http://192.168.65.10:8000"
+
+def load_env() -> None:
+    env_path = Path(__file__).resolve().parents[2] / "deploy" / ".env"
+    if not env_path.exists():
+        return
+    for line in env_path.read_text().splitlines():
+        line = line.strip()
+        if not line or line.startswith("#") or "=" not in line:
+            continue
+        key, value = line.split("=", 1)
+        os.environ.setdefault(key.strip(), value.strip())
+
+
+load_env()
+BASE = os.getenv("MINISOC_API_URL", "http://192.168.65.10:8000")
+API_KEY = os.getenv("API_KEY")
+if not API_KEY:
+    raise SystemExit("API_KEY is missing; set it in deploy/.env")
+
 now = datetime.now(timezone.utc)
 events = []
 for index in range(6):
@@ -29,7 +49,7 @@ request = urllib.request.Request(
     data=body,
     headers={
         "Content-Type": "application/json",
-        "X-API-Key": "dev-ingest-key",
+        "X-API-Key": API_KEY,
     },
     method="POST",
 )

@@ -4,15 +4,15 @@ services:
   postgres:
     image: postgres:16-alpine
     environment:
-      POSTGRES_USER: minisoc
-      POSTGRES_PASSWORD: minisoc_dev_password
-      POSTGRES_DB: minisoc
+      POSTGRES_USER: ${POSTGRES_USER:?set POSTGRES_USER in deploy/.env}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in deploy/.env}
+      POSTGRES_DB: ${POSTGRES_DB:?set POSTGRES_DB in deploy/.env}
     volumes:
       - pgdata:/var/lib/postgresql/data
     ports:
       - "127.0.0.1:5432:5432"
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U minisoc -d minisoc"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
       interval: 5s
       timeout: 5s
       retries: 10
@@ -37,16 +37,16 @@ services:
       context: ../backend
       dockerfile: Dockerfile
     environment:
-      DATABASE_URL: postgresql+psycopg://minisoc:minisoc_dev_password@postgres:5432/minisoc
+      DATABASE_URL: postgresql+psycopg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
       REDIS_URL: redis://redis:6379/0
-      API_KEY: dev-ingest-key
-      JWT_SECRET: dev-jwt-secret-change-me
-      ACCESS_TOKEN_EXPIRE_MINUTES: "60"
-      ADMIN_USERNAME: admin
-      ADMIN_PASSWORD: admin_dev_password
-      RESPONSE_ENABLED: "true"
-      RESPONSE_AGENT_URL: http://192.168.65.20:9000
-      RESPONSE_AGENT_SECRET: dev-response-secret
+      API_KEY: ${API_KEY:?set API_KEY in deploy/.env}
+      JWT_SECRET: ${JWT_SECRET:?set JWT_SECRET in deploy/.env}
+      ACCESS_TOKEN_EXPIRE_MINUTES: ${ACCESS_TOKEN_EXPIRE_MINUTES:-60}
+      ADMIN_USERNAME: ${ADMIN_USERNAME:?set ADMIN_USERNAME in deploy/.env}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:?set ADMIN_PASSWORD in deploy/.env}
+      RESPONSE_ENABLED: ${RESPONSE_ENABLED:-true}
+      RESPONSE_AGENT_URL: ${RESPONSE_AGENT_URL:-http://192.168.65.20:9000}
+      RESPONSE_AGENT_SECRET: ${RESPONSE_AGENT_SECRET:?set RESPONSE_AGENT_SECRET in deploy/.env}
     ports:
       - "8000:8000"
     volumes:

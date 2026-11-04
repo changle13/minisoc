@@ -10,7 +10,7 @@ from datetime import datetime, timezone
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from ipaddress import ip_address
 
-SECRET = os.getenv("MINISOC_RESPONSE_SECRET", "dev-response-secret")
+SECRET = os.getenv("MINISOC_RESPONSE_SECRET", "change-me-response-secret")
 DRY_RUN = os.getenv("MINISOC_RESPONSE_DRY_RUN", "1") == "1"
 PORT = int(os.getenv("MINISOC_RESPONSE_PORT", "9000"))
 LOG_PATH = os.getenv("MINISOC_RESPONSE_LOG", "/var/log/minisoc-response.jsonl")
