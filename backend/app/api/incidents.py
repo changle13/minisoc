@@ -2,12 +2,17 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
+from app.api.deps import require_roles
 from app.db import get_db
 from app.models import Alert, Incident, IncidentAlert
 from app.schemas.alert import AlertOut
 from app.schemas.incident import IncidentDetail, IncidentListResponse, IncidentOut
 
-router = APIRouter(prefix="/api/v1/incidents", tags=["incidents"])
+router = APIRouter(
+    prefix="/api/v1/incidents",
+    tags=["incidents"],
+    dependencies=[Depends(require_roles("viewer", "analyst", "admin"))],
+)
 
 
 @router.get("", response_model=IncidentListResponse)

@@ -40,6 +40,10 @@ services:
       DATABASE_URL: postgresql+psycopg://minisoc:minisoc_dev_password@postgres:5432/minisoc
       REDIS_URL: redis://redis:6379/0
       API_KEY: dev-ingest-key
+      JWT_SECRET: dev-jwt-secret-change-me
+      ACCESS_TOKEN_EXPIRE_MINUTES: "60"
+      ADMIN_USERNAME: admin
+      ADMIN_PASSWORD: admin_dev_password
     ports:
       - "8000:8000"
     volumes:
