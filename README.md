@@ -135,6 +135,14 @@ sudo env MINISOC_RESPONSE_DRY_RUN=0 \
 - 结果：生成 Incident，并通过 `incident_alerts` 关联多条告警
 - 已有 Incident 会复用，避免重复创建
 
+## 验证结果（本地单机靶场）
+
+- 真实 SSH 爆破：6 次失败登录触发 1 条高危 Alert，`count=6`
+- 最后一条失败日志到告警创建：约 **8.2 秒**
+- 告警创建到响应审计落库：约 **0.017-0.038 秒**
+- 自动响应成功在 Victim 的 `MINISOC_BLOCK` 链写入 DROP 规则，并可在测试后解封
+- 以上为本地单机验证数据，不是生产压测结果
+
 ## 安全设计
 
 - Agent 接入使用 API Key，用户登录使用 JWT，二者职责分离
